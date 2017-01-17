@@ -7,5 +7,5 @@
 <a href='https://www.iyzico.com' target='_blank'><strong>{l s="iyzico checkout form web sitesini" mod='iyzicocheckoutform'}</strong></a> 
 {l s="ziyaret edebilirsiniz." mod='iyzicocheckoutform'}</p>
 <br/>
-<p><strong>{l s="Note: You can get your API ID and Secret Key values from https://merchant.iyzipay.com/settings." mod='iyzicocheckoutform'}</strong></p>
+<p><strong>{l s="Not: https://merchant.iyzipay.com/settings adresinden API KEY ve SECRET KEY bilgilerinizi alabilirsiniz." mod='iyzicocheckoutform'}</strong></p>
 </div>

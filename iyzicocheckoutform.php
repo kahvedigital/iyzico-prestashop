@@ -35,7 +35,7 @@ class Iyzicocheckoutform extends PaymentModule
         $this->bootstrap = true;
         parent::__construct();
 
-        $this->displayName = $this->l('Iyzico Checkout Form');
+        $this->displayName = $this->l('iyzico Checkout Form');
         $this->description = $this->l('iyzico checkout form Internet üzerinden müşterilerinize ödeme yöntemleri sunmanın en hızlı ve en kolay yoludur. Sizi karmaşık Sanal POS başvuru işlemlerinden ve bekleme sürelerinden kurtarır.');
 		$this->ps_versions_compliancy = array('min' => '1.6', 'max' => '1.6.99.99');
         $this->confirmUninstall = $this->l('Are you sure about removing these details?');

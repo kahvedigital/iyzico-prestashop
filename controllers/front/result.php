@@ -30,7 +30,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
             $token = $_POST['token'];
 
             if (empty($token)) {
-                $error_msg = ($language_iso_code == "tr") ? 'Jetonu bulunamadı.' : 'Token not found.';
+                $error_msg = ($language_iso_code == "tr") ? 'Güvenlik token bulunamadı' : 'Token not found.';
             }
             
             $cart_total = 0;
@@ -189,7 +189,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
             $this->setTemplate('order_result.tpl');
         } catch (\Exception $ex) {
             $error_msg = $ex->getMessage();
-            $error_msg = !empty($error_msg) ? $error_msg : 'Some error occured.Please try again.';
+            $error_msg = !empty($error_msg) ? $error_msg = ($language_iso_code == "tr") ? "Bir hata oluştu, lütfen tekrar deneyin." : "Unknown Error, please try again";
 
             $this->context->smarty->assign(array(
                 'error' => $error_msg,
@@ -212,7 +212,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
         if ($cart_total == $shipping_toal && $zero_total) {
             $total = 0;
             $cart_total = 0;
-            $error_msg = ($language_iso_code == "tr") ? 'indirim tutarını alışveriş tutarınızı karşılamıştır.' : 'The amount of the discount amounting to meet your shopping.'  ;
+            $error_msg = ($language_iso_code == "tr") ? 'Alışveriş tutarı indirim tutarına eşit olamaz.' : 'Cart total cannot be equal to discount amount.'  ;
             $this->context->smarty->assign(array(
                 'error' => $error_msg,
                 'total' => $total,

@@ -51,14 +51,14 @@
 <div class='panel'>
     <div class='panel-heading'>
         <i class='icon-remove-circle'></i>
-        <label>{l s="Iyzico Cancel Order detail" mod='iyzicocheckoutform'}</label>
+        <label>{l s="iyzico Cancel Order detail" mod='iyzicocheckoutform'}</label>
     </div>
     <div class='well hidden-print'> 
         <form name='cancelOrder' action='{$form_action}' method='post'>
             <input type='hidden' name='id_employee' value='{$id_employee}'/>
             <input type='hidden' name='transaction_id' value='{$transaction_id}'/>
             <label>{l s="Total amount" mod='iyzico'}:&nbsp;&nbsp;</label> {$currency} &nbsp;&nbsp;
-            <input type='submit' name='cancel' value='Cancel Iyzico Order' class='btn btn-default'/>
+            <input type='submit' name='cancel' value='Cancel iyzico Order' class='btn btn-default'/>
         </form>
     </div>
 </div>
@@ -69,7 +69,7 @@
 <div class="panel">
     <div class="panel-heading">
         <i class="icon-share"></i>
-        <label>{l s="Iyzico Order Refund" mod='iyzicocheckoutform'}</label>
+        <label>{l s="iyzico Order Refund" mod='iyzicocheckoutform'}</label>
     </div>
 
     <table class="table" id="iyzico-installment-table">
@@ -125,7 +125,7 @@
 <div class="panel">
     <div class="panel-heading">
         <i class="icon-th"></i>
-        <label>{l s="Iyzico Order History" mod='iyzicocheckoutform'} </label>
+        <label>{l s="iyzico Order History" mod='iyzicocheckoutform'} </label>
     </div>
     <table class="table" id="iyzico-installment-table">
         <thead>
