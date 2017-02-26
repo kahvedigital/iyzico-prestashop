@@ -16,6 +16,7 @@ class Iyzicocheckoutform extends PaymentModule
     public $address;
     public $extra_mail_vars;
     public $_prestashop = '_ps';
+	public $_ModuleVersion = '1.0.1';
 
     protected $hooks = array(
         'payment',
@@ -247,7 +248,7 @@ class Iyzicocheckoutform extends PaymentModule
             $request->setBasketId($params['cookie']->id_cart);
             $request->setPaymentGroup(\Iyzipay\Model\PaymentGroup::PRODUCT);
             $request->setCallbackUrl((Configuration::get('PS_SSL_ENABLED') ? 'https://' : 'http://') . htmlspecialchars($_SERVER['HTTP_HOST'], ENT_COMPAT, 'UTF-8') . __PS_BASE_URI__ . 'index.php?module_action=result&fc=module&module=iyzicocheckoutform&controller=result');
-            $request->setPaymentSource('PRESTASHOP-' . _PS_VERSION_);
+            $request->setPaymentSource('PRESTASHOP-' . _PS_VERSION_ ."-". $this->_ModuleVersion);
             
 
             $buyer = new \Iyzipay\Model\Buyer();
