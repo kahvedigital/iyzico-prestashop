@@ -18,5 +18,3 @@
 9. For Cancel Order, admin can cancel order same day only and admin must have to cancel whole order.
 
 10. For refund, admin can refund per product with partial amount.After refund of one or partial amount of product, admin cannot cancel users order eventhough it is same day order.
-
-
