@@ -152,6 +152,7 @@ class Iyzicocheckoutform extends PaymentModule {
         curl_setopt($ch, CURLOPT_POSTFIELDS, "psversion=$psver&iyzico=$version&type=prestashop");
         $response = curl_exec($ch);
         $response = json_decode($response, true);
+        curl_close($ch)
         $this->context->smarty->assign('version', $response);
 
         $test = $this->context->link->getAdminLink('AdminModules', true) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
@@ -210,23 +211,19 @@ class Iyzicocheckoutform extends PaymentModule {
                 if (!file_exists($fullfoldername)) {
                     mkdir($fullfoldername);
                 }
-                if (file_exists($fullfoldername)) {
-                    $unzipfilename = 'iyzicoupdated.zip';
-                    $file = fopen($fullfoldername . '/' . $unzipfilename, "w+");
-                    fputs($file, $data);
-                    fclose($file);
-                    $path = pathinfo(realpath($fullfoldername . '/' . $unzipfilename), PATHINFO_DIRNAME);
-                    $zip = new ZipArchive;
-                    $res = $zip->open($fullfoldername . '/' . $unzipfilename);
-                    if ($res === TRUE) {
-                        $zip->extractTo($path);
-                        $zip->close();
-                        $zip_name_folder = $response['zip_name_folder'];
-                        recurse_copy($fullfoldername . '/' . $zip_name_folder, _PS_MODULE_DIR_ . '/' . $zip_name_folder);
-                        rrmdir($fullfoldername);
-                    } else {
-                        
-                    }
+                $unzipfilename = 'iyzicoupdated.zip';
+                $file = fopen($fullfoldername . '/' . $unzipfilename, "w+");
+                fputs($file, $data);
+                fclose($file);
+                $path = pathinfo(realpath($fullfoldername . '/' . $unzipfilename), PATHINFO_DIRNAME);
+                $zip = new ZipArchive;
+                $res = $zip->open($fullfoldername . '/' . $unzipfilename);
+                if ($res === TRUE) {
+                    $zip->extractTo($path);
+                    $zip->close();
+                    $zip_name_folder = $response['zip_name_folder'];
+                    recurse_copy($fullfoldername . '/' . $zip_name_folder, _PS_MODULE_DIR_ . '/' . $zip_name_folder);
+                    rrmdir($fullfoldername);
                 } else {
                     
                 }
@@ -544,12 +541,13 @@ class Iyzicocheckoutform extends PaymentModule {
                 if (isset($params['cookie']->id_customer)) {
                     if ($params['cookie']->is_guest !== 1) {
                         $cardcustomer = 'SELECT * FROM `' . _DB_PREFIX_ . 'iyzico_cart_save` WHERE `customer_id`= "' . $params['cookie']->id_customer . '"';
-                        if ($row = Db::getInstance()->getRow($cardcustomer))
+                        if ($row = Db::getInstance()->getRow($cardcustomer)) {
                             if (!(strlen($row['card_key']) == 0) || ($row['card_key'] !== '0') || ($row['card_key'] !== 'null')) {
                                 if ($row['api_key'] == Configuration::get('IYZICO_FORM_LIVE_API_ID')) {
                                     $request->setCardUserKey($row['card_key']);
                                 }
                             }
+                        }
                     }
                 }
 
