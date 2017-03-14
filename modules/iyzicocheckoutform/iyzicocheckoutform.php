@@ -152,7 +152,7 @@ class Iyzicocheckoutform extends PaymentModule {
         curl_setopt($ch, CURLOPT_POSTFIELDS, "psversion=$psver&iyzico=$version&type=prestashop");
         $response = curl_exec($ch);
         $response = json_decode($response, true);
-        curl_close($ch)
+        curl_close($ch);
         $this->context->smarty->assign('version', $response);
 
         $test = $this->context->link->getAdminLink('AdminModules', true) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
@@ -199,6 +199,7 @@ class Iyzicocheckoutform extends PaymentModule {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, "new_version=$version_updatable");
                 $response = curl_exec($ch);
                 $response = json_decode($response, true);
+				curl_close($ch);
                 $serveryol = $_SERVER['DOCUMENT_ROOT'];
                 $ch = curl_init();
                 $source = $response['file_dest'];
@@ -216,6 +217,7 @@ class Iyzicocheckoutform extends PaymentModule {
                 fputs($file, $data);
                 fclose($file);
                 $path = pathinfo(realpath($fullfoldername . '/' . $unzipfilename), PATHINFO_DIRNAME);
+				if (class_exists('ZipArchive')) {
                 $zip = new ZipArchive;
                 $res = $zip->open($fullfoldername . '/' . $unzipfilename);
                 if ($res === TRUE) {
@@ -224,9 +226,8 @@ class Iyzicocheckoutform extends PaymentModule {
                     $zip_name_folder = $response['zip_name_folder'];
                     recurse_copy($fullfoldername . '/' . $zip_name_folder, _PS_MODULE_DIR_ . '/' . $zip_name_folder);
                     rrmdir($fullfoldername);
-                } else {
-                    
-                }
+					} 	
+				}
             }
         }
 
