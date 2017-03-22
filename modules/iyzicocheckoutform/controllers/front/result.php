@@ -11,7 +11,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
         $action_list = array('result' => 'initResult', 'payment' => 'initPayment');
 
         if (isset($action_list[$module_action])) {
-            $this->$action_list[$module_action]();
+	$this->{$action_list[$module_action]}();
         }
     }
 
