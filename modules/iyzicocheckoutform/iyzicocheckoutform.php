@@ -347,6 +347,7 @@ class Iyzicocheckoutform extends PaymentModule {
             $credit_card = ($iso_code == "tr") ? "Kredi Kartı" : "Credit Card";
             $module_dir = __PS_BASE_URI__;
             if ($params['cookie']->is_guest == 1) {
+		$shipping_address->setContactName($guest_user_detail[0]['firstname'] . ' ' . $guest_user_detail[0]['lastname']);
                 $buyer->setLastLoginDate($last_login);
                 $buyer->setRegistrationDate($registration_date);
                 $buyer->setRegistrationAddress($guest_user_detail[0]['address1'] . ' ' . $guest_user_detail[0]['address2']);
