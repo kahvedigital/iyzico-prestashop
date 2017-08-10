@@ -189,7 +189,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
             $this->setTemplate('order_result.tpl');
         } catch (\Exception $ex) {
             $error_msg = $ex->getMessage();
-			if(!empty($error_msg)){
+			if(empty($error_msg)){
 				if($language_iso_code=='tr'){
 					$error_msg="Bir hata oluştu, lütfen tekrar deneyin.";
 				}else{
