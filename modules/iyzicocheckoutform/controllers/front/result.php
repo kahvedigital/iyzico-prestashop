@@ -11,7 +11,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
         $action_list = array('result' => 'initResult', 'payment' => 'initPayment');
 
         if (isset($action_list[$module_action])) {
-	$this->{$action_list[$module_action]}();
+		$this->{$action_list[$module_action]}();
         }
     }
 
@@ -189,7 +189,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
             $this->setTemplate('order_result.tpl');
         } catch (\Exception $ex) {
             $error_msg = $ex->getMessage();
-			if(empty($error_msg)){
+			if(!empty($error_msg)){
 				if($language_iso_code=='tr'){
 					$error_msg="Bir hata oluştu, lütfen tekrar deneyin.";
 				}else{

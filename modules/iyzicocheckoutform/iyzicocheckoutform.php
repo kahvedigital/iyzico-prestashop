@@ -1,13 +1,13 @@
 <?php
-
-error_reporting(0);
+error_reporting(1);
 if (!defined('_PS_VERSION_'))
     exit;
 
 require_once _PS_MODULE_DIR_ . 'iyzicocheckoutform/includer.php';
 require_once _PS_MODULE_DIR_ . 'iyzicocheckoutform/IyzipayBootstrap.php';
 
-class Iyzicocheckoutform extends PaymentModule {
+class Iyzicocheckoutform extends PaymentModule
+{
 
     protected $_html = '';
     protected $_postErrors = array();
@@ -16,17 +16,19 @@ class Iyzicocheckoutform extends PaymentModule {
     public $address;
     public $extra_mail_vars;
     public $_prestashop = '_ps';
-    public $_ModuleVersion = '1.0.1';
+	public $_ModuleVersion = '1.0.3';
+
     protected $hooks = array(
         'payment',
         'backOfficeHeader',
         'displayAdminOrder'
     );
-
-    public function __construct() {
+	
+    public function __construct()
+    {
         $this->name = 'iyzicocheckoutform';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.1';
+        $this->version = '1.0.3';
         $this->author = 'KahveDigital';
         $this->controllers = array('payment', 'validation');
         $this->is_eu_compatible = 1;
@@ -36,11 +38,12 @@ class Iyzicocheckoutform extends PaymentModule {
 
         $this->displayName = $this->l('iyzico Checkout Form');
         $this->description = $this->l('iyzico checkout form Internet üzerinden müşterilerinize ödeme yöntemleri sunmanın en hızlı ve en kolay yoludur. Sizi karmaşık Sanal POS başvuru işlemlerinden ve bekleme sürelerinden kurtarır.');
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => '1.6.99.99');
+		$this->ps_versions_compliancy = array('min' => '1.6', 'max' => '1.6.99.99');
         $this->confirmUninstall = $this->l('Are you sure about removing these details?');
     }
 
-    public function install() {
+    public function install()
+    {
         if (!parent::install() || !$this->registerHook('payment') || !$this->registerHook('displayAdminOrder') || !$this->registerHook('displayPaymentEU') || !$this->registerHook('paymentReturn'))
             return false;
 
@@ -58,17 +61,17 @@ class Iyzicocheckoutform extends PaymentModule {
                          PRIMARY KEY (`id`)
                     ) ENGINE= ' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8'))
             return false;
-
-
-        if (!Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'iyzico_cart_save` (
+			
+			
+		if (!Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'iyzico_cart_save` (
 						`card_save_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                         `customer_id` int(11) unsigned NOT NULL,
                         `api_key` varchar(255) ,
                         `card_key` varchar(155),
                          PRIMARY KEY (`card_save_id`)
                     ) ENGINE= ' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8'))
-            return false;
-
+			 return false;
+			
 
         if (!Db::getInstance()->Execute('ALTER TABLE `' . _DB_PREFIX_ . 'iyzico_order_form` CHANGE `installment_fee` `installment_fee` DOUBLE NOT NULL;'))
             return false;
@@ -87,7 +90,7 @@ class Iyzicocheckoutform extends PaymentModule {
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8'))
             return false;
 
-        $tableName = _DB_PREFIX_ . 'iyzico_cart_detail';
+        $tableName =  _DB_PREFIX_ . 'iyzico_cart_detail';
         $result = Db::getInstance()->ExecuteS("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '{$tableName}' AND COLUMN_NAME = 'currency';");
         if (empty($result)) {
             if (!Db::getInstance()->Execute("ALTER TABLE `" . _DB_PREFIX_ . "iyzico_cart_detail` ADD `currency` VARCHAR(50) NOT NULL DEFAULT 'TRY' AFTER `paid_price`;"))
@@ -113,7 +116,8 @@ class Iyzicocheckoutform extends PaymentModule {
         return true;
     }
 
-    public function uninstall() {
+    public function uninstall()
+    {
         if (parent::uninstall()) {
             Configuration::deleteByName('IYZICO_FORM_LIVE_API_ID');
             Configuration::deleteByName('IYZICO_FORM_LIVE_SECRET');
@@ -124,8 +128,8 @@ class Iyzicocheckoutform extends PaymentModule {
         }
         return true;
     }
-
-    protected function _postValidation() {
+    protected function _postValidation()
+    {
         if (Tools::isSubmit('btnSubmit')) {
             if (!Tools::getValue('IYZICO_FORM_LIVE_API_ID') || !Tools::getValue('IYZICO_FORM_LIVE_SECRET') || !Tools::getValue('IYZICO_FORM_LIVE_API_ID') || !Tools::getValue('IYZICO_FORM_LIVE_SECRET')) {
                 $this->_postErrors[] = $this->l('Account keys are required.');
@@ -133,7 +137,8 @@ class Iyzicocheckoutform extends PaymentModule {
         }
     }
 
-    protected function _postProcess() {
+    protected function _postProcess()
+    {
         if (Tools::isSubmit('btnSubmit')) {
             Configuration::updateValue('IYZICO_FORM_LIVE_API_ID', Tools::getValue('IYZICO_FORM_LIVE_API_ID'));
             Configuration::updateValue('IYZICO_FORM_LIVE_SECRET', Tools::getValue('IYZICO_FORM_LIVE_SECRET'));
@@ -142,98 +147,101 @@ class Iyzicocheckoutform extends PaymentModule {
         $this->_html .= $this->displayConfirmation($this->l('Settings updated'));
     }
 
-    protected function _displayIyzicoInfo() {
-        $version = $this->_ModuleVersion;
-        $psver = _PS_VERSION_;
+    protected function _displayIyzicoInfo()
+    { 	
+		$version=$this->_ModuleVersion;
+		$psver=_PS_VERSION_;	
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, 'http://iyzico.kahvedigital.com/version');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+		curl_setopt($ch,CURLOPT_TIMEOUT,10);
         curl_setopt($ch, CURLOPT_POSTFIELDS, "psversion=$psver&iyzico=$version&type=prestashop");
         $response = curl_exec($ch);
         $response = json_decode($response, true);
-        curl_close($ch);
-        $this->context->smarty->assign('version', $response);
+		$this->context->smarty->assign('version', $response);
 
-        $test = $this->context->link->getAdminLink('AdminModules', true) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
-        $this->context->smarty->assign('link', $test);
-        if ($version == $response['iyzico_version']) {
-            if (isset($_GET['updated_iyzico'])) {
+		$test=$this->context->link->getAdminLink('AdminModules', true) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
+		$this->context->smarty->assign('link', $test);
+		if($version==$response['iyzico_version']){
+		if(isset($_GET['updated_iyzico'])) {
+	
+		$version_updatable=$_GET['updated_iyzico'];
 
-                $version_updatable = $_GET['updated_iyzico'];
-
-                function recurse_copy($src, $dst) {
-                    $dir = opendir($src);
-                    @mkdir($dst);
-                    while (false !== ( $file = readdir($dir))) {
-                        if (( $file != '.' ) && ( $file != '..' )) {
-                            if (is_dir($src . '/' . $file)) {
-                                recurse_copy($src . '/' . $file, $dst . '/' . $file);
-                            } else {
-                                copy($src . '/' . $file, $dst . '/' . $file);
-                            }
-                        }
-                    }
-                    closedir($dir);
-                }
-
-                function rrmdir($dir) {
-                    if (is_dir($dir)) {
-                        $objects = scandir($dir);
-                        foreach ($objects as $object) {
-                            if ($object != "." && $object != "..") {
-                                if (filetype($dir . "/" . $object) == "dir")
-                                    rrmdir($dir . "/" . $object);
-                                else
-                                    unlink($dir . "/" . $object);
-                            }
-                        }
-                        reset($objects);
-                        rmdir($dir);
+        function recurse_copy($src, $dst) {
+            $dir = opendir($src);
+            @mkdir($dst);
+            while (false !== ( $file = readdir($dir))) {
+                if (( $file != '.' ) && ( $file != '..' )) {
+                    if (is_dir($src . '/' . $file)) {
+                        recurse_copy($src . '/' . $file, $dst . '/' . $file);
+                    } else {
+                        copy($src . '/' . $file, $dst . '/' . $file);
                     }
                 }
-
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, 'http://iyzico.kahvedigital.com/update');
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, "new_version=$version_updatable");
-                $response = curl_exec($ch);
-                $response = json_decode($response, true);
-				curl_close($ch);
-                $serveryol = $_SERVER['DOCUMENT_ROOT'];
-                $ch = curl_init();
-                $source = $response['file_dest'];
-                curl_setopt($ch, CURLOPT_URL, $source);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                $data = curl_exec($ch);
-                curl_close($ch);
-                $foldername = $response['version_name'];
-                $fullfoldername = $serveryol . '/' . $foldername;
-                if (!file_exists($fullfoldername)) {
-                    mkdir($fullfoldername);
+            }
+            closedir($dir);
+        }
+        function rrmdir($dir) {
+            if (is_dir($dir)) {
+                $objects = scandir($dir);
+                foreach ($objects as $object) {
+                    if ($object != "." && $object != "..") {
+                        if (filetype($dir . "/" . $object) == "dir")
+                            rrmdir($dir . "/" . $object);
+                        else
+                            unlink($dir . "/" . $object);
+                    }
                 }
-                $unzipfilename = 'iyzicoupdated.zip';
-                $file = fopen($fullfoldername . '/' . $unzipfilename, "w+");
-                fputs($file, $data);
-                fclose($file);
-                $path = pathinfo(realpath($fullfoldername . '/' . $unzipfilename), PATHINFO_DIRNAME);
-				if (class_exists('ZipArchive')) {
-                $zip = new ZipArchive;
-                $res = $zip->open($fullfoldername . '/' . $unzipfilename);
-                if ($res === TRUE) {
-                    $zip->extractTo($path);
-                    $zip->close();
-                    $zip_name_folder = $response['zip_name_folder'];
-                    recurse_copy($fullfoldername . '/' . $zip_name_folder, _PS_MODULE_DIR_ . '/' . $zip_name_folder);
-                    rrmdir($fullfoldername);
-					} 	
-				}
+                reset($objects);
+                rmdir($dir);
             }
         }
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'http://iyzico.kahvedigital.com/update');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "new_version=$version_updatable");
+        $response = curl_exec($ch);
+        $response = json_decode($response, true);
+        $serveryol = $_SERVER['DOCUMENT_ROOT'];
+        $ch = curl_init();
+        $source = $response['file_dest'];
+        curl_setopt($ch, CURLOPT_URL, $source);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $data = curl_exec($ch);
+        curl_close($ch);
+        $foldername = $response['version_name'];
+        $fullfoldername = $serveryol . '/' . $foldername;
+		if(!file_exists($fullfoldername)){
+		 mkdir($fullfoldername);
+		}
+        if (file_exists($fullfoldername)) {
+            $unzipfilename = 'iyzicoupdated.zip';
+            $file = fopen($fullfoldername . '/' . $unzipfilename, "w+");
+            fputs($file, $data);
+            fclose($file);
+            $path = pathinfo(realpath($fullfoldername . '/' . $unzipfilename), PATHINFO_DIRNAME);
+            $zip = new ZipArchive;
+            $res = $zip->open($fullfoldername . '/' . $unzipfilename);        
+		  if ($res === TRUE) {
+                $zip->extractTo($path);
+                $zip->close();
+                $zip_name_folder = $response['zip_name_folder'];
+                recurse_copy($fullfoldername . '/' . $zip_name_folder, _PS_MODULE_DIR_ .'/'.$zip_name_folder);
+                rrmdir($fullfoldername);
+            } else {
+            }
+        } else {
+           }
+  		}
+		}
 
-        return $this->display(__FILE__, 'infos.tpl');
+	        return $this->display(__FILE__, 'infos.tpl');
     }
 
+
+	
+	
+	
     public function getContent() {
         if (Tools::isSubmit('btnSubmit')) {
             $this->_postValidation();
@@ -251,34 +259,28 @@ class Iyzicocheckoutform extends PaymentModule {
         return $this->_html;
     }
 
-    public function hookPayment($params) {
+    public function hookPayment($params)
+    {
         try {
-
+    
             $currency_query = 'SELECT * FROM `' . _DB_PREFIX_ . 'currency` WHERE `id_currency`= "' . $params['cookie']->id_currency . '"';
             $currency = Db::getInstance()->ExecuteS($currency_query);
             $cart_id = $this->context->cookie->id_cart;
             $product_ids_discount = array();
             $productsIds = array();
             $product_id_contain_discount = array();
-            $currency_arr = array('TRY', 'EUR', 'USD', 'GBP', 'IRR');
             $iso_code = $this->context->language->iso_code;
-            $erorr_msg = ($iso_code == "tr") ? 'Girdiğiniz kur değeri sistem tarafından desteklenmemektedir. Lütfen kur değerinin TL, USD, EUR, GBP veya IRR olduğundan emin olunuz.' : 'The current exchange rate you entered is not supported by the system. Please use TRY, USD, EUR, GBP, IRR exchange rate.';
-            if (!in_array(strtoupper($currency[0]['iso_code']), $currency_arr)) {
-                $this->smarty->assign(array(
-                    'currency_error' => $erorr_msg,
-                ));
-                return $this->display(__FILE__, 'payment.tpl');
-            }
-
+            $erorr_msg = ($iso_code == "tr") ? 'Girdiğiniz kur değeri sistem tarafından desteklenmemektedir. Lütfen kur değerinin TL, USD, EUR, GBP veya IRR olduğundan emin olunuz.' :  'The current exchange rate you entered is not supported by the system. Please use TRY, USD, EUR, GBP, IRR exchange rate.';
+            
             IyzipayBootstrap::init();
             $options = new \Iyzipay\Options();
             $options->setApiKey(Configuration::get('IYZICO_FORM_LIVE_API_ID'));
             $options->setSecretKey(Configuration::get('IYZICO_FORM_LIVE_SECRET'));
             $options->setBaseUrl("https://api.iyzipay.com");
             $form_class = Configuration::get('IYZICO_FORM_CLASS');
-
+            
             $locale = ($iso_code == "tr") ? Iyzipay\Model\Locale::TR : Iyzipay\Model\Locale::EN;
-
+           
 
             $query = 'SELECT * FROM `' . _DB_PREFIX_ . 'address` WHERE `id_customer`= "' . $params['cookie']->id_customer . '"';
             $guest_user_detail = Db::getInstance()->ExecuteS($query);
@@ -292,7 +294,7 @@ class Iyzicocheckoutform extends PaymentModule {
             $order_amount = (double) number_format($params['cart']->getOrderTotal(true, Cart::BOTH), 2, '.', '');
             $product_sub_total = number_format($params['cart']->getOrderTotal(true, Cart::ONLY_PRODUCTS), 2, '.', '');
             $shipping_price = number_format($params['cart']->getOrderTotal(true, Cart::ONLY_SHIPPING), 2, '.', '');
-
+           
 
             $first_name = !empty($params['cookie']->customer_firstname) ? $params['cookie']->customer_firstname : 'NOT PROVIDED';
             $last_name = !empty($params['cookie']->customer_lastname) ? $params['cookie']->customer_lastname : 'NOT PROVIDED';
@@ -319,17 +321,17 @@ class Iyzicocheckoutform extends PaymentModule {
             $shipping_country = !empty($shipping_detail->country) ? $shipping_detail->country : 'NOT PROVIDED';
             $shipping_postcode = !empty($shipping_detail->postcode) ? $shipping_detail->postcode : 'NOT PROVIDED';
 
-
+  
             $request = new \Iyzipay\Request\CreateCheckoutFormInitializeRequest();
             $request->setLocale($locale);
             $request->setConversationId(uniqid() . $this->_prestashop);
             $request->setPaidPrice(number_format($order_amount, 2, '.', ''));
-            $request->setCurrency($this->getCurrencyConstant($currency[0]['iso_code']));
+            $request->setCurrency($currency[0]['iso_code']);
             $request->setBasketId($params['cookie']->id_cart);
             $request->setPaymentGroup(\Iyzipay\Model\PaymentGroup::PRODUCT);
             $request->setCallbackUrl((Configuration::get('PS_SSL_ENABLED') ? 'https://' : 'http://') . htmlspecialchars($_SERVER['HTTP_HOST'], ENT_COMPAT, 'UTF-8') . __PS_BASE_URI__ . 'index.php?module_action=result&fc=module&module=iyzicocheckoutform&controller=result');
-            $request->setPaymentSource('PRESTASHOP-' . _PS_VERSION_ . "-" . $this->_ModuleVersion);
-
+            $request->setPaymentSource('PRESTASHOP-' . _PS_VERSION_ ."-". $this->_ModuleVersion);
+            
 
             $buyer = new \Iyzipay\Model\Buyer();
             $buyer->setId($params['cookie']->id_customer);
@@ -339,23 +341,22 @@ class Iyzicocheckoutform extends PaymentModule {
             $buyer->setEmail($email);
             $buyer->setIdentityNumber($params['cookie']->id_customer . uniqid());
             $buyer->setIp((string) Tools::getRemoteAddr());
-
+            
             $billing_address = new \Iyzipay\Model\Address();
             $billing_address->setContactName($first_name . ' ' . $last_name);
-
+            
             $shipping_address = new \Iyzipay\Model\Address();
             $credit_card = ($iso_code == "tr") ? "Kredi Kartı" : "Credit Card";
-            $module_dir = __PS_BASE_URI__;
-            if ($params['cookie']->is_guest == 1) {
-		$shipping_address->setContactName($guest_user_detail[0]['firstname'] . ' ' . $guest_user_detail[0]['lastname']);
+			$module_dir=__PS_BASE_URI__;
+            if ($params['cookie']->is_guest == 1) {           
                 $buyer->setLastLoginDate($last_login);
                 $buyer->setRegistrationDate($registration_date);
-                $buyer->setRegistrationAddress($guest_user_detail[0]['address1'] . ' ' . $guest_user_detail[0]['address2']);
+                $buyer->setRegistrationAddress($guest_user_detail[0]['address1'] . ' ' . $guest_user_detail[0]['address2']);            
                 $buyer->setGsmNumber($phone_mobile);
                 $buyer->setCity($city);
                 $buyer->setCountry($country);
                 $buyer->setZipCode($postcode);
-
+ 
                 $billing_address->setCity($city);
                 $billing_address->setCountry($country);
                 $billing_address->setAddress($guest_user_detail[0]['address1'] . ' ' . $guest_user_detail[0]['address2']);
@@ -386,7 +387,7 @@ class Iyzicocheckoutform extends PaymentModule {
                 $shipping_address->setAddress($shipping_detail->address1 . ' ' . $shipping_detail->address2);
                 $shipping_address->setZipCode($shipping_postcode);
             }
-
+            
             foreach ($products as $product) {
                 $productsIds[] = $product['id_product'];
             }
@@ -457,7 +458,7 @@ class Iyzicocheckoutform extends PaymentModule {
                 }
 
                 if ($product_price > 0) {
-                    $item = new \Iyzipay\Model\BasketItem();
+                    $item = new  \Iyzipay\Model\BasketItem();
                     $item->setId($product['id_product']);
                     $item->setName($product['name']);
                     $item->setCategory1($category);
@@ -539,21 +540,17 @@ class Iyzicocheckoutform extends PaymentModule {
                 ));
 
                 $last_insert_id = Db::getInstance()->Insert_ID();
+				
+			if (isset($params['cookie']->id_customer)){
+			if ($params['cookie']->is_guest !== 1) {  					
+			$cardcustomer = 'SELECT * FROM `' . _DB_PREFIX_ . 'iyzico_cart_save` WHERE `customer_id`= "' . $params['cookie']->id_customer . '"';
+			if ($row = Db::getInstance()->getRow($cardcustomer))
+			if ( !(strlen($row['card_key']) == 0) || ($row['card_key'] !== '0') || ($row['card_key'] !== 'null') ){
+			if($row['api_key'] == Configuration::get('IYZICO_FORM_LIVE_API_ID')){
+			$request->setCardUserKey($row['card_key']);
+			}}}}
 
-                if (isset($params['cookie']->id_customer)) {
-                    if ($params['cookie']->is_guest !== 1) {
-                        $cardcustomer = 'SELECT * FROM `' . _DB_PREFIX_ . 'iyzico_cart_save` WHERE `customer_id`= "' . $params['cookie']->id_customer . '"';
-                        if ($row = Db::getInstance()->getRow($cardcustomer)) {
-                            if (!(strlen($row['card_key']) == 0) || ($row['card_key'] !== '0') || ($row['card_key'] !== 'null')) {
-                                if ($row['api_key'] == Configuration::get('IYZICO_FORM_LIVE_API_ID')) {
-                                    $request->setCardUserKey($row['card_key']);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                $response = \Iyzipay\Model\CheckoutFormInitialize::create($request, $options);
+                 $response = \Iyzipay\Model\CheckoutFormInitialize::create($request, $options);
 
                 $update_array = array(
                     'transaction_status' => 'success',
@@ -574,7 +571,7 @@ class Iyzicocheckoutform extends PaymentModule {
                     $this->context->smarty->assign('response', $this->response);
                     $this->context->smarty->assign('form_class', $form_class);
                     $this->context->smarty->assign('credit_card', $credit_card);
-                    $this->context->smarty->assign('module_dir', $module_dir);
+					$this->context->smarty->assign('module_dir', $module_dir);
                     $this->error = '';
                 }
                 $this->smarty->assign(array(
@@ -582,6 +579,7 @@ class Iyzicocheckoutform extends PaymentModule {
                     'this_path' => $this->_path,
                     'this_path_bw' => $this->_path,
                     'this_path_ssl' => Tools::getShopDomainSsl(true, true) . __PS_BASE_URI__ . 'modules/' . $this->name . '/',
+                    
                 ));
                 return $this->display(__FILE__, 'payment.tpl');
             } else {
@@ -595,7 +593,8 @@ class Iyzicocheckoutform extends PaymentModule {
         }
     }
 
-    private function _productDiscountArr($cart_id, $product_id_contain_discount) {
+    private function _productDiscountArr($cart_id, $product_id_contain_discount)
+    {
         $product_ids_discount = array();
         $cart_product_discounted_ids = array_keys($product_id_contain_discount);
         $cart_rule_query = 'SELECT cr.id_cart,cr.id_cart_rule, crpg.id_product_rule_group  FROM ' . _DB_PREFIX_ . 'cart_cart_rule cr '
@@ -635,7 +634,8 @@ class Iyzicocheckoutform extends PaymentModule {
         return $product_ids_discount;
     }
 
-    private function _getProductRules($id_product_rule_group) {
+    private function _getProductRules($id_product_rule_group)
+    {
         $results = Db::getInstance()->executeS('
 		SELECT *
 		FROM ' . _DB_PREFIX_ . 'cart_rule_product_rule pr
@@ -644,7 +644,8 @@ class Iyzicocheckoutform extends PaymentModule {
         return $results;
     }
 
-    private function _findCartRulePrice($id_cart_rule, $is_product_specific_discount) {
+    private function _findCartRulePrice($id_cart_rule, $is_product_specific_discount)
+    {
         if ($is_product_specific_discount) {
             $sql = 'SELECT reduction_amount, reduction_percent FROM ' . _DB_PREFIX_ . 'cart_rule WHERE reduction_product > 0 AND id_cart_rule = ' . (int) $id_cart_rule . ' LIMIT 0,1';
         } else {
@@ -658,7 +659,8 @@ class Iyzicocheckoutform extends PaymentModule {
         return $results;
     }
 
-    public function checkCurrency($cart) {
+    public function checkCurrency($cart)
+    {
         $currency_order = new Currency($cart->id_currency);
         $currencies_module = $this->getCurrency($cart->id_currency);
 
@@ -669,7 +671,8 @@ class Iyzicocheckoutform extends PaymentModule {
         return false;
     }
 
-    public function renderForm() {
+    public function renderForm()
+    {
         $fields_form = array(
             'form' => array(
                 'legend' => array(
@@ -731,7 +734,8 @@ class Iyzicocheckoutform extends PaymentModule {
         return $helper->generateForm(array($fields_form));
     }
 
-    public function getConfigFieldsValues() {
+    public function getConfigFieldsValues()
+    {
 
         return array(
             'IYZICO_FORM_LIVE_API_ID' => Tools::getValue('IYZICO_FORM_LIVE_API_ID', Configuration::get('IYZICO_FORM_LIVE_API_ID')),
@@ -740,7 +744,8 @@ class Iyzicocheckoutform extends PaymentModule {
         );
     }
 
-    public function hookDisplayAdminOrder($params) {
+    public function hookDisplayAdminOrder($params)
+    {
         $order_detail = array();
         $iyzico_installment_data = IyzicocheckoutformOrder::getByPsOrderId($params['id_order']);
         $order_amount = number_format($params['cart']->getOrderTotal(true, Cart::BOTH), 2, '.', '');
@@ -795,26 +800,6 @@ class Iyzicocheckoutform extends PaymentModule {
         return $this->display(__FILE__, 'order_detail.tpl');
     }
 
-    private function getCurrencyConstant($currencyCode) {
-        $currency = \Iyzipay\Model\Currency::TL;
-        switch ($currencyCode) {
-            case "TRY":
-                $currency = \Iyzipay\Model\Currency::TL;
-                break;
-            case "USD":
-                $currency = \Iyzipay\Model\Currency::USD;
-                break;
-            case "GBP":
-                $currency = \Iyzipay\Model\Currency::GBP;
-                break;
-            case "EUR":
-                $currency = \Iyzipay\Model\Currency::EUR;
-                break;
-            case "IRR":
-                $currency = \Iyzipay\Model\Currency::IRR;
-                break;
-        }
-        return $currency;
-    }
+
 
 }
