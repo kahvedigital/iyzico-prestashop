@@ -234,10 +234,6 @@ class Iyzicocheckoutform extends PaymentModule
 	        return $this->display(__FILE__, 'infos.tpl');
     }
 
-
-	
-	
-	
     public function getContent() {
         if (Tools::isSubmit('btnSubmit')) {
             $this->_postValidation();
