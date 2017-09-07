@@ -1,5 +1,4 @@
 <?php
-error_reporting(1);
 if (!defined('_PS_VERSION_'))
     exit;
 
@@ -149,91 +148,88 @@ class Iyzicocheckoutform extends PaymentModule
 
     protected function _displayIyzicoInfo()
     { 	
-		$version=$this->_ModuleVersion;
-		$psver=_PS_VERSION_;	
+	$version=$this->_ModuleVersion;
+	$psver=_PS_VERSION_;	
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, 'http://iyzico.kahvedigital.com/version');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch,CURLOPT_TIMEOUT,10);
+	curl_setopt($ch,CURLOPT_TIMEOUT,10);
         curl_setopt($ch, CURLOPT_POSTFIELDS, "psversion=$psver&iyzico=$version&type=prestashop");
         $response = curl_exec($ch);
         $response = json_decode($response, true);
-		$this->context->smarty->assign('version', $response);
+	$this->context->smarty->assign('version', $response);
 
-		$test=$this->context->link->getAdminLink('AdminModules', true) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
-		$this->context->smarty->assign('link', $test);
-		if($version==$response['iyzico_version']){
-		if(isset($_GET['updated_iyzico'])) {
-	
-		$version_updatable=$_GET['updated_iyzico'];
-
-        function recurse_copy($src, $dst) {
-            $dir = opendir($src);
-            @mkdir($dst);
-            while (false !== ( $file = readdir($dir))) {
-                if (( $file != '.' ) && ( $file != '..' )) {
-                    if (is_dir($src . '/' . $file)) {
-                        recurse_copy($src . '/' . $file, $dst . '/' . $file);
-                    } else {
-                        copy($src . '/' . $file, $dst . '/' . $file);
+	$test=$this->context->link->getAdminLink('AdminModules', true) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
+	$this->context->smarty->assign('link', $test);
+	if ($version == $response['iyzico_version']) {
+        if (isset($_GET['updated_iyzico'])) {
+            $version_updatable = $_GET['updated_iyzico'];
+            function recurse_copy($src, $dst) {
+                    $dir = opendir($src);
+                    @mkdir($dst);
+                    while (false !== ( $file = readdir($dir))) {
+                        if (( $file != '.' ) && ( $file != '..' )) {
+                            if (is_dir($src . '/' . $file)) {
+                                recurse_copy($src . '/' . $file, $dst . '/' . $file);
+                            } else {
+                                copy($src . '/' . $file, $dst . '/' . $file);
+                            }
+                        }
+                    }
+                    closedir($dir);
+                }
+                function rrmdir($dir) {
+                    if (is_dir($dir)) {
+                        $objects = scandir($dir);
+                        foreach ($objects as $object) {
+                            if ($object != "." && $object != "..") {
+                                if (filetype($dir . "/" . $object) == "dir")
+                                    rrmdir($dir . "/" . $object);
+                                else
+                                    unlink($dir . "/" . $object);
+                            }
+                        }
+                        reset($objects);
+                        rmdir($dir);
                     }
                 }
-            }
-            closedir($dir);
-        }
-        function rrmdir($dir) {
-            if (is_dir($dir)) {
-                $objects = scandir($dir);
-                foreach ($objects as $object) {
-                    if ($object != "." && $object != "..") {
-                        if (filetype($dir . "/" . $object) == "dir")
-                            rrmdir($dir . "/" . $object);
-                        else
-                            unlink($dir . "/" . $object);
-                    }
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, 'http://iyzico.kahvedigital.com/update');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, "new_version=$version_updatable");
+                $response = curl_exec($ch);
+                $response = json_decode($response, true);
+		curl_close($ch);
+                $serveryol = $_SERVER['DOCUMENT_ROOT'];
+                $ch = curl_init();
+                $source = $response['file_dest'];
+                curl_setopt($ch, CURLOPT_URL, $source);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $data = curl_exec($ch);
+                curl_close($ch);
+                $foldername = $response['version_name'];
+                $fullfoldername = $serveryol . '/' . $foldername;
+                if (!file_exists($fullfoldername)) {
+                    mkdir($fullfoldername);
                 }
-                reset($objects);
-                rmdir($dir);
+                $unzipfilename = 'iyzicoupdated.zip';
+                $file = fopen($fullfoldername . '/' . $unzipfilename, "w+");
+                fputs($file, $data);
+                fclose($file);
+                $path = pathinfo(realpath($fullfoldername . '/' . $unzipfilename), PATHINFO_DIRNAME);
+				if (class_exists('ZipArchive')) {
+                $zip = new ZipArchive;
+                $res = $zip->open($fullfoldername . '/' . $unzipfilename);
+                if ($res === TRUE) {
+                    $zip->extractTo($path);
+                    $zip->close();
+                    $zip_name_folder = $response['zip_name_folder'];
+                    recurse_copy($fullfoldername . '/' . $zip_name_folder, _PS_MODULE_DIR_ . '/' . $zip_name_folder);
+                    rrmdir($fullfoldername);
+					} 	
+				}
             }
         }
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, 'http://iyzico.kahvedigital.com/update');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, "new_version=$version_updatable");
-        $response = curl_exec($ch);
-        $response = json_decode($response, true);
-        $serveryol = $_SERVER['DOCUMENT_ROOT'];
-        $ch = curl_init();
-        $source = $response['file_dest'];
-        curl_setopt($ch, CURLOPT_URL, $source);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $data = curl_exec($ch);
-        curl_close($ch);
-        $foldername = $response['version_name'];
-        $fullfoldername = $serveryol . '/' . $foldername;
-		if(!file_exists($fullfoldername)){
-		 mkdir($fullfoldername);
-		}
-        if (file_exists($fullfoldername)) {
-            $unzipfilename = 'iyzicoupdated.zip';
-            $file = fopen($fullfoldername . '/' . $unzipfilename, "w+");
-            fputs($file, $data);
-            fclose($file);
-            $path = pathinfo(realpath($fullfoldername . '/' . $unzipfilename), PATHINFO_DIRNAME);
-            $zip = new ZipArchive;
-            $res = $zip->open($fullfoldername . '/' . $unzipfilename);        
-		  if ($res === TRUE) {
-                $zip->extractTo($path);
-                $zip->close();
-                $zip_name_folder = $response['zip_name_folder'];
-                recurse_copy($fullfoldername . '/' . $zip_name_folder, _PS_MODULE_DIR_ .'/'.$zip_name_folder);
-                rrmdir($fullfoldername);
-            } else {
-            }
-        } else {
-           }
-  		}
-		}
 
 	        return $this->display(__FILE__, 'infos.tpl');
     }
@@ -799,7 +795,4 @@ class Iyzicocheckoutform extends PaymentModule
         ));
         return $this->display(__FILE__, 'order_detail.tpl');
     }
-
-
-
 }
