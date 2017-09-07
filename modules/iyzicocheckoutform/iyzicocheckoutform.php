@@ -1,6 +1,4 @@
 <?php
-
-error_reporting(0);
 if (!defined('_PS_VERSION_'))
     exit;
 
