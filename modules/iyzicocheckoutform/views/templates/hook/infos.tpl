@@ -11,10 +11,12 @@
 <p><strong>{l s="Note: You can get your API ID and Secret Key values from https://merchant.iyzipay.com/settings." mod='iyzicocheckoutform'}</strong></p>
 </div>
 {if $version.version_status == '1'}
+
 <div class="alert alert-danger">
 <img src="../modules/iyzicocheckoutform/iyzicocheckoutform.png" style="float:left; margin-right:15px;">
 
+
 Yeni bir versiyon mevcut güncellemek için <a href='{$link}&updated_iyzico={$version.new_version_id}'>tıklayınız</a>. <br/>Veya iyzico entegrasyon sayfasına giderek indirebilirsiniz. <a href="https://dev.iyzipay.com/tr/acik-kaynak/prestashop" target="_blank">Entegrasyon sayfası</a>
 
-</div>
-{/if}
+
+</div>{/if}
