@@ -6,11 +6,56 @@ include(dirname(__FILE__) . '/iyzicocheckoutform.php');
 
 require_once 'IyzipayBootstrap.php';
 
+
+$cookie = new Cookie('psAdmin');
+
+$token  = Tools::getAdminToken('AdminOrders'.(int)(Tab::getIdFromClassName('AdminOrders')).(int)($cookie->id_employee));
+
+
+
+$message = array(
+    'msg' => 'Fail',
+    'response' => 'Admin girişiniz doğrulanamıyor'
+);
+
+
+if(Tools::getValue('token')) {
+
+    if(Tools::getValue('token')!==$token ) {      
+        
+        
+        echo json_encode($message);
+        exit;
+    }
+
+    $cookie = new Cookie('psAdmin');
+
+    if(!$cookie->id_employee){
+        
+        $message['response'] = 'Admin girişiniz zaman aşımına uğramış olabilir.';
+        echo json_encode($message);
+        exit;
+    }
+
+} else {
+
+    echo json_encode($message);
+    exit;
+}
+
+
 try {
     IyzipayBootstrap::init();
     $error_msg = '';
     
-    $query = 'SELECT * FROM ' . _DB_PREFIX_ . 'iyzico_cart_detail WHERE payment_transaction_id = "' . $_POST['payment_id'] . '"';
+
+    $payment_id     = pSQL(Tools::getValue('payment_id'));
+    $refunded       = pSQL(Tools::getValue('refunded'));
+    $refund_price   = pSQL(Tools::getValue('refund_price'));
+    $language       = Tools::getValue('language');
+
+    
+    $query = 'SELECT * FROM ' . _DB_PREFIX_ . 'iyzico_cart_detail WHERE payment_transaction_id = "' . $payment_id . '"';
     $refund_amount = Db::getInstance()->ExecuteS($query);
     
     //iyzico order details not found
@@ -24,7 +69,7 @@ try {
     }
    
     $total_refund = $refund_amount[0]['paid_price'] - $refund_amount[0]['total_refunded_amount'];
-    $refund = number_format($_POST['refund_price'], 2, '.', '');
+    $refund = number_format($refund_price, 2, '.', '');
     
     //Set api,secret and base url
     $options = new \Iyzipay\Options();
@@ -43,7 +88,7 @@ try {
     }
     
    //refund order
-    if (empty($_POST['payment_id'])) {
+    if (empty($payment_id)) {
         $message = array(
             'msg' => 'Fail',
             'response' => 'Payment Id not found'
@@ -52,7 +97,7 @@ try {
         exit;
     }
     
-    if (!empty($_POST['language']) && $_POST['language'] == 'tr') {
+    if (!empty($language) && $language == 'tr') {
         $lang = 'tr';
     } else {
         $lang = 'en';
@@ -66,8 +111,8 @@ try {
     $request = new \Iyzipay\Request\CreateRefundRequest();
     $request->setLocale($locale);
     $request->setConversationId(uniqid() . '_ps');
-    $request->setPaymentTransactionId($_POST['payment_id']);
-    $request->setPrice($_POST['refund_price']);
+    $request->setPaymentTransactionId($payment_id);
+    $request->setPrice($refund_price);
     $request->setCurrency($refund_amount[0]['currency']);
     $request->setIp((string) Tools::getRemoteAddr());
     
@@ -108,14 +153,14 @@ try {
             'transaction_status' => 'success',
             'api_response' => pSQL($response->getRawResult()),
             'updated' => date('Y-m-d H:i:s'),
-            'note' => 'Refund has been done succesfully.<br/> Refund Price: ' . $_POST['refund_price'],
+            'note' => 'Refund has been done succesfully.<br/> Refund Price: ' . $refund_price,
         );
         $update = Db::getInstance()->update('iyzico_api_log', $update_array, 'id = ' . (int) $last_insert_id);
     }
 
-    $total_refunded = $_POST['refunded'] + $_POST['refund_price'];
+    $total_refunded = $refunded + $refund_price;
 
-    $query = 'UPDATE ' . _DB_PREFIX_ . 'iyzico_cart_detail SET total_refunded_amount = "' . $total_refunded . '"  WHERE  `payment_transaction_id`= "' . $_POST['payment_id'] . '"';
+    $query = 'UPDATE ' . _DB_PREFIX_ . 'iyzico_cart_detail SET total_refunded_amount = "' . $total_refunded . '"  WHERE  `payment_transaction_id`= "' . $payment_id . '"';
     $refund_result = Db::getInstance()->ExecuteS($query);
 
     //success response

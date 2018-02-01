@@ -57,6 +57,7 @@
         <form name='cancelOrder' action='{$form_action}' method='post'>
             <input type='hidden' name='id_employee' value='{$id_employee}'/>
             <input type='hidden' name='transaction_id' value='{$transaction_id}'/>
+            <input type='hidden' name='token' value='{$token}'/>
             <label>{l s="Total amount" mod='iyzico'}:&nbsp;&nbsp;</label> {$currency} &nbsp;&nbsp;
             <input type='submit' name='cancel' value='Cancel Iyzico Order' class='btn btn-default'/>
         </form>
@@ -110,6 +111,7 @@
                     <input class="form-control" type="hidden" name="payment_id_{$i.item_id}" id="payment_id_{$i.item_id}" value="{$i.payment_transaction_id}"/>
                     <input class="form-control" type="hidden" name="product_price_{$i.item_id}" id="product_price_{$i.item_id}" value="{$i.paid_price}"/>
                     <input class="form-control" type="hidden" name="refunded_{$i.item_id}" id="refunded_{$i.item_id}" value="{$i.total_refunded_amount}"/>
+                    <input type='hidden' name='token' value='{$token}'/>
                     <div id="refund_error" class="error-msg" style="color: red;"></div>
                     <a item-id="{$i.item_id}" class="refund-button">
                         <input type="button" name="refund" value="Refund" class='btn btn-default'/>
@@ -178,11 +180,12 @@
         var product_price = $("#product_price_" + id).val();
         var refunded = $("#refunded_" + id).val();
         var refund_limit = (product_price - refunded).toFixed(2);
+        var token        = "{{$token}}";
 
         $.ajax({
             url: "{$refund_url}",
             type: "POST",
-            data: "payment_id=" + payment_transaction_id + "&refund_price=" + refund_price + "&refunded=" + refunded,
+            data: "payment_id=" + payment_transaction_id + "&refund_price=" + refund_price + "&refunded=" + refunded+"&token="+token,refunded,
             success: function (result) {
                 var message = JSON.parse(result);
                 if (message['msg'] == 'Fail') {
