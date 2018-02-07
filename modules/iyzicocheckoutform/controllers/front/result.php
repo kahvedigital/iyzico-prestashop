@@ -84,8 +84,8 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
             }
 
             $cart_total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-            $total = $response->getPaidPrice();
-            $payment_currency = $response->getCurrency();
+            $total = pSQL($response->getPaidPrice());
+            $payment_currency = pSQL($response->getCurrency());
             $currency = new Currency((int) ($cart->id_currency));
             $iso_code = ($currency->iso_code) ? $currency->iso_code : '';
 
@@ -95,27 +95,30 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
         
 		if ($cart->is_guest !== 1) { 
 		$cardcustomer = 'SELECT * FROM `' . _DB_PREFIX_ . 'iyzico_cart_save` WHERE `customer_id`= "' . $cart->id_customer . '"';
-			if ($row = Db::getInstance()->getRow($cardcustomer)){
-						$card_user_key = $response->GetcardUserKey();
-						$merchant_api_id = Configuration::get('IYZICO_FORM_LIVE_API_ID');
-						$customer_id=$cart->id_customer;
-						$card_update_array = array(
-                        'customer_id' => (int) $customer_id,
-                        'card_key' => $card_user_key,
-                        'api_key' =>$merchant_api_id,
+            if ($row = Db::getInstance()->getRow($cardcustomer)){
+
+                        $card_user_key    = pSQL($response->GetcardUserKey());
+                        $merchant_api_id  = Configuration::get('IYZICO_FORM_LIVE_API_ID');
+                        $customer_id      = $cart->id_customer;
+
+                        $card_update_array = array(
+                        'customer_id' =>  $customer_id,
+                        'card_key'    =>  $card_user_key,
+                        'api_key'     =>  $merchant_api_id,
                
                     );
 			Db::getInstance()->update('iyzico_cart_save', $card_update_array, 'customer_id = ' . (int) $customer_id);
 				
 			}else{
-				$card_user_key = $response->GetcardUserKey();
-				$merchant_api_id = Configuration::get('IYZICO_FORM_LIVE_API_ID');
-				$customer_id=$cart->id_customer;
-				
-					$card_update_array = array(
-                        'customer_id' => (int) $customer_id,
-                        'card_key' => $card_user_key,
-                        'api_key' =>$merchant_api_id,
+
+                $card_user_key      = pSQL($response->GetcardUserKey());
+                $merchant_api_id    = Configuration::get('IYZICO_FORM_LIVE_API_ID');
+                $customer_id        = $cart->id_customer;
+                
+                    $card_update_array = array(
+                        'customer_id' => $customer_id,
+                        'card_key'    => $card_user_key,
+                        'api_key'     => $merchant_api_id,
                 );
 				
 				    $cardfields = '`' . implode('`,`', array_keys($card_update_array)) . '`';
@@ -124,7 +127,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
                     Db::getInstance()->execute($card_query);
 		
 				}			
-				}
+			}
 
             if ($response->getInstallment()) {
 
@@ -133,16 +136,17 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
                 $installment_fee = abs($response->getPaidPrice() - $response->getPrice());
 
                 $response_arr = array(
-                    'order_id' => (int) $current_order_id,
-                    'transaction_id' => $cart->id,
-                    'installment_fee' => $installment_fee,
-                    'installment_amount' => (double) $total,
-                    'installment_no' => (int) $response->getInstallment(),
-                    'installment_brand' => $response->getCardAssociation(),
-                    'response_data' => $response->getRawResult(),
-                    'created' => date('Y-m-d H:i:s'),
-                    'processing_time' => $response->getSystemTime()
+                    'order_id'              => (int) $current_order_id,
+                    'transaction_id'        => $cart->id,
+                    'installment_fee'       => pSQL($installment_fee),
+                    'installment_amount'    => (double) $total,
+                    'installment_no'        => (int) pSQL($response->getInstallment()),
+                    'installment_brand'     => pSQL($response->getCardAssociation()),
+                    'response_data'         => pSQL($response->getRawResult()),
+                    'created'               => date('Y-m-d H:i:s'),
+                    'processing_time'       => pSQL($response->getSystemTime())
                 );
+
                 IyzicocheckoutformOrder::insertOrder($response_arr);
 
                 $order_detail = $response->getPaymentItems();
@@ -150,9 +154,9 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
                 foreach ($order_detail as $detail) {
                     $detail_arr = array(
                         'order_id' => (int) $current_order_id,
-                        'item_id' => $detail->getItemId(),
-                        'payment_transaction_id' => $detail->getPaymentTransactionId(),
-                        'paid_price' => $detail->getPaidPrice(),
+                        'item_id' => pSQL($detail->getItemId()),
+                        'payment_transaction_id' => pSQL($detail->getPaymentTransactionId()),
+                        'paid_price' => pSQL($detail->getPaidPrice()),
                         'currency' => $payment_currency,
                         'total_refunded_amount' => 0,
                         'created' => date('Y-m-d H:i:s'),
@@ -179,6 +183,7 @@ class IyzicocheckoutformResultModuleFrontController extends ModuleFrontControlle
                         'api_response' => pSQL($response->getRawResult()),
                         'updated' => date('Y-m-d H:i:s'),
                     );
+
 
                     Db::getInstance()->update('iyzico_api_log', $update_array, 'id = ' . (int) $last_insert_id);
                 }
